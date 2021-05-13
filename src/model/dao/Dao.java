@@ -1,9 +1,11 @@
 package model.dao;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+
 import model.Asiakas;
 
 public class Dao {
@@ -17,7 +19,8 @@ public class Dao {
     	Connection con = null;    	
     	String path = System.getProperty("catalina.base");    	
     	path = path.substring(0, path.indexOf(".metadata")).replace("\\", "/"); //Eclipsessa
-    	//path += "/webapps/"; //Tuotannossa. Laita tietokanta webapps-kansioon
+    	//System.out.println("Polku on: " + path);
+    	//path += "/webapps/"; //Tuotannossa. Laita kanta webapps-kansioon.
     	String url = "jdbc:sqlite:"+path+db;    	
     	try {	       
     		Class.forName("org.sqlite.JDBC");
@@ -31,30 +34,59 @@ public class Dao {
 	}
 	
 	public ArrayList<Asiakas> listaaKaikki(){
-		ArrayList<Asiakas> myynti = new ArrayList<Asiakas>();
-		sql = "SELECT * FROM asiakkaat";       
+		ArrayList<Asiakas> asiakkaat = new ArrayList<Asiakas>();
+		sql = "SELECT * FROM asiakkaat"; 		
 		try {
 			con=yhdista();
 			if(con!=null){ //jos yhteys onnistui
 				stmtPrep = con.prepareStatement(sql);        		
         		rs = stmtPrep.executeQuery();   
-				if(rs!=null){ //jos kysely onnistui
-					//con.close();					
+				if(rs!=null){ //jos kysely onnistui									
 					while(rs.next()){
 						Asiakas asiakas = new Asiakas();
 						asiakas.setAsiakas_id(rs.getInt(1));
 						asiakas.setEtunimi(rs.getString(2));
 						asiakas.setSukunimi(rs.getString(3));
-						asiakas.setPuhelin(rs.getString(4));	
+						asiakas.setPuhelin(rs.getString(4));
 						asiakas.setSposti(rs.getString(5));
-						//asiakas.add(asiakas);
-					}					
+						asiakkaat.add(asiakas);
+						}					
 				}				
-			}	
+			}
 			con.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
-		return myynti;
+		return asiakkaat;
+	}
+	
+	public ArrayList<Asiakas> listaaKaikki(String hakusana){
+		ArrayList<Asiakas> asiakkaat = new ArrayList<Asiakas>();
+		sql = "SELECT * FROM asiakkaat WHERE etunimi LIKE ? or sukunimi LIKE ? or sposti LIKE ?";		
+		try {
+			con=yhdista();
+			if(con!=null){ //jos yhteys onnistui
+				stmtPrep = con.prepareStatement(sql);  
+				stmtPrep.setString(1, "%" + hakusana + "%");
+				stmtPrep.setString(2, "%" + hakusana + "%");   
+				stmtPrep.setString(3, "%" + hakusana + "%");   
+        		rs = stmtPrep.executeQuery();   
+				if(rs!=null){ //jos kysely onnistui							
+					while(rs.next()){
+						Asiakas asiakas = new Asiakas();
+						asiakas.setAsiakas_id(rs.getInt(1));
+						asiakas.setEtunimi(rs.getString(2));
+						asiakas.setSukunimi(rs.getString(3));
+						asiakas.setPuhelin(rs.getString(4));
+						asiakas.setSposti(rs.getString(5));
+						asiakkaat.add(asiakas);
+					}						
+				}
+				con.close();
+			}			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+		return asiakkaat;
 	}
 }
